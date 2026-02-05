@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
+import { requireAuth } from '../../shared/auth';
 
 export async function registerNotifications(app: FastifyInstance) {
-  app.get('/notifications', async (req, reply) => {
+  app.get('/notifications', { preHandler: requireAuth }, async (req, reply) => {
     // Mock notifications for now
     return [
       { id: 1, title: 'New Request', message: 'User Alice created a request', time: '2 mins ago', read: false },

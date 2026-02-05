@@ -30,7 +30,7 @@ interface Notification {
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -46,11 +46,17 @@ export function Layout() {
 
   useEffect(() => {
     // Fetch notifications
-    fetch('http://localhost:4000/notifications')
+    if (token) {
+      fetch('http://localhost:4000/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
       .then(res => res.json())
-      .then(data => setNotifications(data))
+      .then(data => {
+        if (Array.isArray(data)) setNotifications(data);
+      })
       .catch(err => console.error('Failed to fetch notifications', err));
-  }, []);
+    }
+  }, [token]);
 
   const handleLogout = () => {
     logout();

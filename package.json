@@ -8,8 +8,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run -w apps/api build && npm run -w apps/worker build",
+    "build": "npm run -w apps/api build && npm run -w apps/worker build && npm run -w apps/web build",
     "dev": "npm run -w apps/api dev",
+    "dev:web": "npm run -w apps/web dev",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc -b",
     "test": "tsx --test",

@@ -1,0 +1,30 @@
+{
+  "name": "ops-os",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ops: Autonomous Operations OS",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run -w apps/api build && npm run -w apps/worker build",
+    "dev": "npm run -w apps/api dev",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc -b",
+    "test": "tsx --test",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@types/node": "^20.11.10",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "husky": "^9.0.10",
+    "prettier": "^3.2.5",
+    "typescript": "^5.5.4",
+    "tsx": "^4.7.1"
+  }
+}

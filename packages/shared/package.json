@@ -1,0 +1,14 @@
+{
+  "name": "@ops/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.10",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,18 +1,39 @@
+import { useState, useEffect } from 'react';
 import { Badge } from "@/components/Badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Input } from "@/components/Input"
 import { Search, AlertCircle, CheckCircle2, XCircle } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
-const logs = [
-  { id: "LOG-5521", action: "User Login", actor: "admin@ops.os", ip: "192.168.1.1", status: "Success", time: "2 mins ago" },
-  { id: "LOG-5520", action: "Update Settings", actor: "admin@ops.os", ip: "192.168.1.1", status: "Success", time: "15 mins ago" },
-  { id: "LOG-5519", action: "Failed Login", actor: "unknown@ip", ip: "45.33.22.11", status: "Failed", time: "1 hour ago" },
-  { id: "LOG-5518", action: "Delete Request", actor: "manager@ops.os", ip: "10.0.0.5", status: "Success", time: "2 hours ago" },
-  { id: "LOG-5517", action: "API Key Created", actor: "dev@ops.os", ip: "10.0.0.12", status: "Success", time: "5 hours ago" },
-  { id: "LOG-5516", action: "Payment Refund", actor: "system", ip: "internal", status: "Warning", time: "1 day ago" },
-]
+interface AuditLog {
+  id: string;
+  actorType: string;
+  actorId: string;
+  action: string;
+  reasoning: string | null;
+  createdAt: string;
+  payload: string | null;
+}
 
 export function Audit() {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetch('http://localhost:3000/audit/logs', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data)) {
+            setLogs(data);
+        }
+    })
+    .catch(err => console.error(err));
+  }, [token]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -32,22 +53,37 @@ export function Audit() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {logs.map((log) => (
+            {logs.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">No audit logs found.</div>
+            ) : logs.map((log) => (
               <div key={log.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
                 <div className="flex items-center gap-4">
-                  {log.status === 'Success' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
-                  {log.status === 'Failed' && <XCircle className="h-5 w-5 text-red-500" />}
-                  {log.status === 'Warning' && <AlertCircle className="h-5 w-5 text-yellow-500" />}
+                  {/* Heuristic for icon based on action name */}
+                  {(log.action.includes('success') || log.action.includes('created') || log.action.includes('completed')) ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (log.action.includes('fail') || log.action.includes('error')) ? (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                  ) : (
+                      <AlertCircle className="h-5 w-5 text-blue-500" />
+                  )}
+                  
                   <div>
                     <div className="font-medium">{log.action}</div>
                     <div className="text-xs text-muted-foreground">
-                      by <span className="font-mono text-primary">{log.actor}</span> • {log.ip}
+                      by <span className="font-mono text-primary">{log.actorId}</span> ({log.actorType})
                     </div>
+                    {log.reasoning && (
+                        <div className="text-xs text-muted-foreground mt-0.5 italic">
+                            {log.reasoning}
+                        </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="font-mono text-xs">{log.id}</Badge>
-                  <span className="text-sm text-muted-foreground w-24 text-right">{log.time}</span>
+                  <Badge variant="outline" className="font-mono text-xs hidden sm:inline-flex">{log.id.substring(0, 8)}</Badge>
+                  <span className="text-sm text-muted-foreground w-32 text-right">
+                      {new Date(log.createdAt).toLocaleString()}
+                  </span>
                 </div>
               </div>
             ))}

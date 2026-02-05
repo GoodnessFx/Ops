@@ -9,9 +9,18 @@ type AuditInput = {
 };
 
 export async function logAudit(input: AuditInput) {
-  await db.query(
-    `insert into audit_logs (actor_type, actor_id, action, reasoning, payload)
-     values ($1, $2, $3, $4, $5)`,
-    [input.actorType, input.actorId, input.action, input.reasoning ?? null, input.payload ?? null]
-  );
+  try {
+    await db.auditLog.create({
+      data: {
+        actorType: input.actorType,
+        actorId: input.actorId,
+        action: input.action,
+        reasoning: input.reasoning,
+        payload: input.payload ? JSON.stringify(input.payload) : undefined
+      }
+    });
+  } catch (e) {
+    console.error('Failed to log audit:', e);
+    // Don't throw, we don't want to break the main flow for audit logging
+  }
 }

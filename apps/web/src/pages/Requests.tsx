@@ -1,20 +1,39 @@
+import { useState, useEffect } from 'react';
 import { Badge } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Input } from "@/components/Input"
 import { Search, Filter, MoreHorizontal } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
-const requests = [
-  { id: "REQ-1024", subject: "Unable to reset password", user: "alice@example.com", status: "Open", priority: "High", date: "2024-03-10" },
-  { id: "REQ-1023", subject: "Billing question for March", user: "bob@company.co", status: "In Progress", priority: "Medium", date: "2024-03-09" },
-  { id: "REQ-1022", subject: "Feature request: Dark mode", user: "charlie@design.io", status: "Closed", priority: "Low", date: "2024-03-08" },
-  { id: "REQ-1021", subject: "API Rate limit exceeded", user: "dev@startup.com", status: "Open", priority: "Critical", date: "2024-03-08" },
-  { id: "REQ-1020", subject: "Integration with Slack failing", user: "ops@corp.net", status: "In Progress", priority: "High", date: "2024-03-07" },
-  { id: "REQ-1019", subject: "Update credit card info", user: "finance@llc.com", status: "Closed", priority: "Medium", date: "2024-03-06" },
-  { id: "REQ-1018", subject: "Export data not working", user: "data@analyst.org", status: "Open", priority: "Medium", date: "2024-03-05" },
-]
+interface Request {
+  id: string;
+  subject: string;
+  user: string;
+  status: string;
+  priority: string;
+  date: string;
+}
 
 export function Requests() {
+  const [requests, setRequests] = useState<Request[]>([]);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetch('http://localhost:3000/requests', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data)) {
+            setRequests(data);
+        }
+    })
+    .catch(err => console.error(err));
+  }, [token]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -55,9 +74,15 @@ export function Requests() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {requests.map((req) => (
+                {requests.length === 0 ? (
+                    <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                            No requests found.
+                        </td>
+                    </tr>
+                ) : requests.map((req) => (
                   <tr key={req.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-muted-foreground">{req.id}</td>
+                    <td className="px-4 py-3 font-mono text-muted-foreground">{req.id.substring(0, 8)}</td>
                     <td className="px-4 py-3 font-medium">{req.subject}</td>
                     <td className="px-4 py-3 text-muted-foreground">{req.user}</td>
                     <td className="px-4 py-3">

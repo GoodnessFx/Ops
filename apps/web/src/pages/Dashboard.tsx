@@ -1,18 +1,39 @@
+import { useState, useEffect } from "react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 import { ArrowUpRight, ArrowDownRight, Activity, Users, CreditCard, DollarSign } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/Card"
+import { useAuth } from "../context/AuthContext"
 
-const data = [
-  { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Feb", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Mar", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Apr", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "May", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Jun", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Jul", total: Math.floor(Math.random() * 5000) + 1000 },
-]
+interface StatItem {
+    value: number | string;
+    change: string;
+}
+
+interface DashboardStats {
+    revenue: StatItem;
+    subscriptions: StatItem;
+    sales: StatItem;
+    active: StatItem;
+    chartData: Array<{ name: string, total: number }>;
+}
 
 export function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetch('http://localhost:3000/stats/dashboard', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => setStats(data))
+    .catch(err => console.error(err));
+  }, [token]);
+
+  if (!stats) {
+      return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between space-y-2">
@@ -26,10 +47,10 @@ export function Dashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">${stats.revenue.value}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <span className="text-green-500 flex items-center mr-1">
-                <ArrowUpRight className="h-3 w-3" /> +20.1%
+                <ArrowUpRight className="h-3 w-3" /> {stats.revenue.change}
               </span>
               from last month
             </p>
@@ -41,10 +62,10 @@ export function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
+            <div className="text-2xl font-bold">+{stats.subscriptions.value}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <span className="text-green-500 flex items-center mr-1">
-                <ArrowUpRight className="h-3 w-3" /> +180.1%
+                <ArrowUpRight className="h-3 w-3" /> {stats.subscriptions.change}
               </span>
               from last month
             </p>
@@ -56,10 +77,10 @@ export function Dashboard() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12,234</div>
+            <div className="text-2xl font-bold">+{stats.sales.value}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <span className="text-red-500 flex items-center mr-1">
-                <ArrowDownRight className="h-3 w-3" /> -4.5%
+                <ArrowDownRight className="h-3 w-3" /> {stats.sales.change}
               </span>
               from last month
             </p>
@@ -71,9 +92,9 @@ export function Dashboard() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
+            <div className="text-2xl font-bold">+{stats.active.value}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              +201 since last hour
+              {stats.active.change} since last hour
             </p>
           </CardContent>
         </Card>
@@ -90,7 +111,7 @@ export function Dashboard() {
           <CardContent className="pl-2">
             <div className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
+                <BarChart data={stats.chartData}>
                   <XAxis
                     dataKey="name"
                     stroke="#888888"
@@ -107,43 +128,46 @@ export function Dashboard() {
                   />
                   <Tooltip 
                     cursor={{fill: 'transparent'}}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
-                  <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="total" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
+        
+        {/* Placeholder for Recent Activity or other widgets */}
         <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Sales</CardTitle>
-            <CardDescription>
-              You made 265 sales this month.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              {[
-                { name: "Olivia Martin", email: "olivia.martin@email.com", amount: "+$1,999.00", initials: "OM" },
-                { name: "Jackson Lee", email: "jackson.lee@email.com", amount: "+$39.00", initials: "JL" },
-                { name: "Isabella Nguyen", email: "isabella.nguyen@email.com", amount: "+$299.00", initials: "IN" },
-                { name: "William Kim", email: "will@email.com", amount: "+$99.00", initials: "WK" },
-                { name: "Sofia Davis", email: "sofia.davis@email.com", amount: "+$39.00", initials: "SD" }
-              ].map((sale, i) => (
-                <div key={i} className="flex items-center">
-                  <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary mr-4">
-                    {sale.initials}
-                  </div>
-                  <div className="ml-4 space-y-1">
-                    <p className="text-sm font-medium leading-none">{sale.name}</p>
-                    <p className="text-sm text-muted-foreground">{sale.email}</p>
-                  </div>
-                  <div className="ml-auto font-medium">{sale.amount}</div>
+            <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Latest system events.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    <div className="flex items-center">
+                        <div className="ml-4 space-y-1">
+                            <p className="text-sm font-medium leading-none">User Login</p>
+                            <p className="text-sm text-muted-foreground">admin@ops.os logged in</p>
+                        </div>
+                        <div className="ml-auto font-medium text-xs text-muted-foreground">2m ago</div>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="ml-4 space-y-1">
+                            <p className="text-sm font-medium leading-none">New Request</p>
+                            <p className="text-sm text-muted-foreground">REQ-1025 created</p>
+                        </div>
+                        <div className="ml-auto font-medium text-xs text-muted-foreground">15m ago</div>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="ml-4 space-y-1">
+                            <p className="text-sm font-medium leading-none">Backup Completed</p>
+                            <p className="text-sm text-muted-foreground">System backup successful</p>
+                        </div>
+                        <div className="ml-auto font-medium text-xs text-muted-foreground">1h ago</div>
+                    </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
+            </CardContent>
         </Card>
       </div>
     </div>

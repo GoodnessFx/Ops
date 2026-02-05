@@ -7,10 +7,20 @@ export async function registerAudit(app: FastifyInstance) {
     '/audit/logs',
     { preHandler: [requireAuth, requireRole('admin')] },
     async () => {
-      const res = await db.query(
-        'select id, actor_type, actor_id, action, reasoning, created_at from audit_logs order by id desc limit 50'
-      );
-      return res.rows;
+      const logs = await db.auditLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          actorType: true,
+          actorId: true,
+          action: true,
+          reasoning: true,
+          createdAt: true,
+          payload: true
+        }
+      });
+      return logs;
     }
   );
 }

@@ -1,0 +1,177 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("agent") // admin, agent, viewer
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]
+}
+
+model Customer {
+  id             String                @id @default(uuid())
+  email          String                @unique
+  name           String?
+  phone          String?
+  company        String?
+  segment        String                @default("standard")
+  healthScore    Int                   @default(100)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  conversations  Conversation[]
+  invoices       Invoice[]
+  leads          Lead[]
+  healthScores   CustomerHealthScore[]
+}
+
+model Conversation {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  status      String    @default("open") // open, closed, snoozed
+  priority    String    @default("medium") // low, medium, high, critical
+  channel     String    @default("email") // email, slack, whatsapp
+  sentiment   Float     @default(0.5) // 0-1
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  content        String
+  senderType     String       // user, agent, ai
+  senderId       String?
+  sentiment      Float?
+  createdAt      DateTime     @default(now())
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   @default("pending") // pending, in_progress, completed
+  priority    String   @default("medium")
+  category    String   // support, sales, ops, payment
+  assignedTo  String?
+  assignee    User?    @relation(fields: [assignedTo], references: [id])
+  confidence  Float?   // AI confidence score
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lead {
+  id          String   @id @default(uuid())
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  email       String
+  name        String?
+  score       Int      @default(0)
+  status      String   @default("new") // new, contacted, qualified, won, lost
+  value       Float    @default(0)
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id          String   @id @default(uuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  amount      Float
+  currency    String   @default("USD")
+  status      String   @default("draft") // draft, sent, paid, overdue, void
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  transactions PaymentTransaction[]
+}
+
+model PaymentTransaction {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  amount      Float
+  status      String   // success, failed, pending
+  gateway     String   // stripe, paypal
+  createdAt   DateTime @default(now())
+}
+
+model Workflow {
+  id          String   @id @default(uuid())
+  name        String
+  trigger     String
+  actions     String   // JSON string of actions
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Integration {
+  id          String   @id @default(uuid())
+  name        String   // slack, hubspot, stripe
+  config      String   // JSON config (encrypted ideally)
+  isConnected Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorType   String
+  actorId     String
+  action      String
+  reasoning   String?
+  payload     String?  // JSON
+  createdAt   DateTime @default(now())
+}
+
+model Request {
+  id        String   @id @default(uuid())
+  subject   String
+  user      String
+  status    String   @default("Open")
+  priority  String   @default("Medium")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model KnowledgeBase {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  tags        String?
+  category    String
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  eventType   String
+  payload     String?
+  createdAt   DateTime @default(now())
+}
+
+model CustomerHealthScore {
+  id          String   @id @default(uuid())
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  score       Int
+  reason      String?
+  createdAt   DateTime @default(now())
+}

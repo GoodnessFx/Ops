@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -11,15 +11,29 @@ import {
   Menu,
   X,
   Search,
-  Bell
+  Bell,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { Button } from './Button';
 import { Input } from './Input';
+import { useAuth } from '../context/AuthContext';
+
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+}
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   
   const links = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -29,6 +43,19 @@ export function Layout() {
     { to: '/knowledge', icon: Book, label: 'Knowledge Base' },
     { to: '/integrations', icon: Settings, label: 'Integrations' },
   ];
+
+  useEffect(() => {
+    // Fetch notifications
+    fetch('http://localhost:3000/notifications')
+      .then(res => res.json())
+      .then(data => setNotifications(data))
+      .catch(err => console.error('Failed to fetch notifications', err));
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground font-sans">
@@ -79,13 +106,16 @@ export function Layout() {
 
         <div className="border-t p-4">
           <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-            <div className="h-9 w-9 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold ring-2 ring-background">
-              AD
+            <div className="h-9 w-9 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold ring-2 ring-background uppercase">
+              {user?.name?.slice(0, 2) || 'AD'}
             </div>
             <div className="flex-1 overflow-hidden">
-              <div className="truncate text-sm font-medium">Admin User</div>
-              <div className="truncate text-xs text-muted-foreground">admin@ops.os</div>
+              <div className="truncate text-sm font-medium">{user?.name || 'Admin User'}</div>
+              <div className="truncate text-xs text-muted-foreground">{user?.email || 'admin@ops.os'}</div>
             </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -101,30 +131,51 @@ export function Layout() {
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
           </Button>
-          
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[300px]"
-              />
-            </div>
+
+          <div className="flex-1 max-w-xl">
+             <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search anything..." 
+                  className="pl-9 bg-muted/50 border-none focus-visible:bg-background transition-colors"
+                />
+             </div>
           </div>
-          
-          <div className="ml-auto flex items-center gap-2">
-             <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+
+          <div className="ml-auto flex items-center gap-2 relative">
+             <Button variant="ghost" size="icon" onClick={() => setNotificationsOpen(!notificationsOpen)}>
+               <Bell className="h-5 w-5" />
+               {notifications.some(n => !n.read) && (
+                 <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
+               )}
              </Button>
+
+             {notificationsOpen && (
+                 <div className="absolute right-0 top-16 w-80 bg-card border rounded-lg shadow-lg z-50 overflow-hidden bg-white dark:bg-slate-950">
+                     <div className="p-3 border-b font-semibold text-sm">Notifications</div>
+                     <div className="max-h-80 overflow-y-auto">
+                         {notifications.length === 0 ? (
+                             <div className="p-4 text-center text-sm text-muted-foreground">No notifications</div>
+                         ) : (
+                             notifications.map(n => (
+                                 <div key={n.id} className={cn("p-3 border-b last:border-0 hover:bg-muted/50 cursor-pointer", !n.read && "bg-primary/5")}>
+                                     <div className="flex justify-between items-start mb-1">
+                                         <span className="font-medium text-sm">{n.title}</span>
+                                         <span className="text-xs text-muted-foreground">{n.time}</span>
+                                     </div>
+                                     <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
+                                 </div>
+                             ))
+                         )}
+                     </div>
+                 </div>
+             )}
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-muted/10 p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-10">
           <Outlet />
         </main>
       </div>

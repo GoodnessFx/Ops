@@ -14,14 +14,16 @@
     "@fastify/cors": "^8.2.0",
     "@fastify/jwt": "^8.0.1",
     "@fastify/sensible": "^5.4.0",
+    "@prisma/client": "5.10.2",
     "dotenv": "^16.4.5",
     "fastify": "^4.29.1",
     "pg": "^8.11.3",
+    "prisma": "5.10.2",
     "redis": "^4.6.13"
   },
   "devDependencies": {
-    "@types/pg": "^8.10.2",
     "@types/node": "^20.11.10",
+    "@types/pg": "^8.10.2",
     "tsx": "^4.7.1",
     "typescript": "^5.5.4"
   }

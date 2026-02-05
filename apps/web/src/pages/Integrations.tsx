@@ -1,25 +1,45 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/Card"
 import { Check, Plus } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
-const integrations = [
-  { id: "slack", name: "Slack", description: "Send notifications to Slack channels.", connected: true, icon: "S" },
-  { id: "hubspot", name: "HubSpot", description: "Sync contacts and deals with CRM.", connected: false, icon: "H" },
-  { id: "stripe", name: "Stripe", description: "Process payments and subscriptions.", connected: true, icon: "St" },
-  { id: "github", name: "GitHub", description: "Link commits to deployment events.", connected: false, icon: "G" },
-  { id: "sendgrid", name: "SendGrid", description: "Transactional email service.", connected: false, icon: "Se" },
-  { id: "aws", name: "AWS CloudWatch", description: "Monitor infrastructure metrics.", connected: true, icon: "A" },
-]
+interface Integration {
+    id: string;
+    name: string;
+    description: string;
+    connected: boolean;
+    icon: string;
+}
 
 export function Integrations() {
-  const [connected, setConnected] = useState<Record<string, boolean>>(
-    integrations.reduce((acc, curr) => ({ ...acc, [curr.id]: curr.connected }), {})
-  )
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetch('http://localhost:4000/integrations', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data)) setIntegrations(data);
+    })
+    .catch(err => console.error(err));
+  }, [token]);
 
   const toggle = (id: string) => {
-    setConnected(prev => ({ ...prev, [id]: !prev[id] }))
+    fetch(`http://localhost:4000/integrations/${id}/toggle`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            setIntegrations(prev => prev.map(i => i.id === id ? { ...i, connected: data.connected } : i));
+        }
+    })
+    .catch(err => console.error(err));
   }
 
   return (
@@ -30,7 +50,11 @@ export function Integrations() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {integrations.map((tool) => (
+        {integrations.length === 0 ? (
+             <div className="col-span-3 text-center text-muted-foreground py-12">
+                 Loading integrations...
+             </div>
+        ) : integrations.map((tool) => (
           <Card key={tool.id} className="flex flex-col">
             <CardHeader className="flex-row items-start justify-between space-y-0">
               <div className="flex items-center gap-3">
@@ -41,7 +65,7 @@ export function Integrations() {
                   <CardTitle className="text-base">{tool.name}</CardTitle>
                 </div>
               </div>
-              {connected[tool.id] ? (
+              {tool.connected ? (
                 <Badge variant="success" className="ml-auto">Connected</Badge>
               ) : (
                 <Badge variant="outline" className="ml-auto">Not Connected</Badge>
@@ -52,11 +76,11 @@ export function Integrations() {
             </CardContent>
             <CardFooter>
               <Button 
-                variant={connected[tool.id] ? "outline" : "default"} 
+                variant={tool.connected ? "outline" : "default"} 
                 className="w-full"
                 onClick={() => toggle(tool.id)}
               >
-                {connected[tool.id] ? (
+                {tool.connected ? (
                   <>
                     <Check className="mr-2 h-4 w-4" /> Configure
                   </>

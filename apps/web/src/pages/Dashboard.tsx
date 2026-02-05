@@ -22,7 +22,7 @@ export function Dashboard() {
   const { token } = useAuth();
 
   useEffect(() => {
-    fetch('http://localhost:3000/stats/dashboard', {
+    fetch('http://localhost:4000/stats/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())

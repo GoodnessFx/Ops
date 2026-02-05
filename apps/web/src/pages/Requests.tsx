@@ -20,7 +20,7 @@ export function Requests() {
   const { token } = useAuth();
 
   useEffect(() => {
-    fetch('http://localhost:3000/requests', {
+    fetch('http://localhost:4000/requests', {
       headers: {
         'Authorization': `Bearer ${token}`
       }

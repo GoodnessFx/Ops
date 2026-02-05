@@ -1,17 +1,33 @@
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/Card"
 import { ArrowUpRight, ArrowDownRight, Download, CreditCard, DollarSign } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
-const transactions = [
-  { id: "TX-9988", customer: "Acme Corp", amount: "$1,200.00", status: "Paid", date: "Mar 10, 2024" },
-  { id: "TX-9987", customer: "Globex Inc", amount: "$850.00", status: "Pending", date: "Mar 09, 2024" },
-  { id: "TX-9986", customer: "Soylent Corp", amount: "$2,300.00", status: "Paid", date: "Mar 09, 2024" },
-  { id: "TX-9985", customer: "Initech", amount: "$120.00", status: "Failed", date: "Mar 08, 2024" },
-  { id: "TX-9984", customer: "Umbrella Corp", amount: "$5,000.00", status: "Paid", date: "Mar 08, 2024" },
-]
+interface Transaction {
+  id: string;
+  customer: string;
+  amount: string;
+  status: string;
+  date: string;
+}
 
 export function Payments() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetch('http://localhost:4000/payments/transactions', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data)) setTransactions(data);
+    })
+    .catch(err => console.error(err));
+  }, [token]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -87,7 +103,9 @@ export function Payments() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {transactions.map((tx) => (
+                {transactions.length === 0 ? (
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No transactions found.</td></tr>
+                ) : transactions.map((tx) => (
                   <tr key={tx.id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3 font-mono text-muted-foreground">{tx.id}</td>
                     <td className="px-4 py-3 font-medium">{tx.customer}</td>

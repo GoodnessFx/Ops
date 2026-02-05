@@ -46,7 +46,7 @@ export function Layout() {
 
   useEffect(() => {
     // Fetch notifications
-    fetch('http://localhost:3000/notifications')
+    fetch('http://localhost:4000/notifications')
       .then(res => res.json())
       .then(data => setNotifications(data))
       .catch(err => console.error('Failed to fetch notifications', err));

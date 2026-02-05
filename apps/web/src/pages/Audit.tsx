@@ -20,7 +20,7 @@ export function Audit() {
   const { token } = useAuth();
 
   useEffect(() => {
-    fetch('http://localhost:3000/audit/logs', {
+    fetch('http://localhost:4000/audit/logs', {
       headers: {
         'Authorization': `Bearer ${token}`
       }

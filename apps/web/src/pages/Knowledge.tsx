@@ -1,17 +1,32 @@
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/Card"
 import { Input } from "@/components/Input"
 import { Search, FileText, ExternalLink } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
-const articles = [
-  { id: 1, title: "Getting Started with Ops OS", category: "Onboarding", reads: "1.2k", updated: "2 days ago" },
-  { id: 2, title: "Configuring Email Integrations", category: "Integrations", reads: "854", updated: "1 week ago" },
-  { id: 3, title: "Understanding Payment Flows", category: "Payments", reads: "2.1k", updated: "3 weeks ago" },
-  { id: 4, title: "API Authentication Guide", category: "Developer", reads: "3.4k", updated: "1 month ago" },
-  { id: 5, title: "Troubleshooting Worker Nodes", category: "Operations", reads: "543", updated: "2 days ago" },
-  { id: 6, title: "Managing User Roles", category: "Administration", reads: "921", updated: "5 days ago" },
-]
+interface Article {
+    id: number | string;
+    title: string;
+    category: string;
+    reads: string;
+    updated: string;
+}
 
 export function Knowledge() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    fetch('http://localhost:4000/knowledge/articles', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data)) setArticles(data);
+    })
+    .catch(err => console.error(err));
+  }, [token]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -26,7 +41,11 @@ export function Knowledge() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {articles.map((article) => (
+        {articles.length === 0 ? (
+            <div className="col-span-3 text-center text-muted-foreground py-12">
+                No articles found.
+            </div>
+        ) : articles.map((article) => (
           <Card key={article.id} className="hover:border-primary/50 transition-all cursor-pointer group">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

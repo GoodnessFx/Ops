@@ -10,13 +10,11 @@ import {
   Activity, 
   Menu,
   X,
-  Search,
   Bell,
   LogOut
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { Button } from './Button';
-import { Input } from './Input';
 import { useAuth } from '../context/AuthContext';
 
 interface Notification {
@@ -80,7 +78,7 @@ export function Layout() {
       )}>
         <div className="flex h-16 items-center gap-2 border-b px-6 font-bold text-xl tracking-tight text-primary">
           <Activity className="h-6 w-6" />
-          <span>Ops OS</span>
+          <span>Ethid</span>
           <button 
             className="ml-auto lg:hidden"
             onClick={() => setSidebarOpen(false)}
@@ -139,15 +137,7 @@ export function Layout() {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <div className="flex-1 max-w-xl">
-             <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search anything..." 
-                  className="pl-9 bg-muted/50 border-none focus-visible:bg-background transition-colors"
-                />
-             </div>
-          </div>
+          <div className="flex-1" />
 
           <div className="ml-auto flex items-center gap-2 relative">
              <Button variant="ghost" size="icon" onClick={() => setNotificationsOpen(!notificationsOpen)}>

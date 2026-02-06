@@ -38,7 +38,12 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Login to Ops</CardTitle>
+          <CardTitle className="text-2xl text-center">Login to Ethid</CardTitle>
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm text-center">
+            <p className="font-semibold">Demo Credentials:</p>
+            <p>Email: admin@ops.com</p>
+            <p>Password: (any)</p>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

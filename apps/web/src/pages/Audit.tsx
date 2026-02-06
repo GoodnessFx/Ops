@@ -18,6 +18,7 @@ interface AuditLog {
 export function Audit() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const { token } = useAuth();
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetch('http://localhost:4000/audit/logs', {
@@ -47,15 +48,28 @@ export function Audit() {
             <CardTitle>System Activity</CardTitle>
             <div className="relative w-[300px]">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search logs..." className="pl-8" />
+              <Input 
+                placeholder="Search logs..." 
+                className="pl-8" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {logs.length === 0 ? (
+            {logs.filter(log => 
+                log.action.toLowerCase().includes(search.toLowerCase()) || 
+                log.actorId.toLowerCase().includes(search.toLowerCase()) ||
+                (log.reasoning && log.reasoning.toLowerCase().includes(search.toLowerCase()))
+            ).length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">No audit logs found.</div>
-            ) : logs.map((log) => (
+            ) : logs.filter(log => 
+                log.action.toLowerCase().includes(search.toLowerCase()) || 
+                log.actorId.toLowerCase().includes(search.toLowerCase()) ||
+                (log.reasoning && log.reasoning.toLowerCase().includes(search.toLowerCase()))
+            ).map((log) => (
               <div key={log.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
                 <div className="flex items-center gap-4">
                   {/* Heuristic for icon based on action name */}

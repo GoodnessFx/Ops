@@ -21,6 +21,7 @@ export function Requests() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newSubject, setNewSubject] = useState('');
   const [newPriority, setNewPriority] = useState('Medium');
+  const [search, setSearch] = useState('');
 
   const fetchRequests = () => {
     fetch('http://localhost:4000/requests', {
@@ -119,7 +120,12 @@ export function Requests() {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search requests..." className="pl-8 w-[250px]" />
+                <Input 
+                  placeholder="Search requests..." 
+                  className="pl-8 w-[250px]" 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
               <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
@@ -138,17 +144,24 @@ export function Requests() {
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Priority</th>
                   <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {requests.length === 0 ? (
+                {requests.filter(req => 
+                    req.subject.toLowerCase().includes(search.toLowerCase()) || 
+                    req.user.toLowerCase().includes(search.toLowerCase()) ||
+                    req.id.includes(search)
+                ).length === 0 ? (
                     <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                             No requests found.
                         </td>
                     </tr>
-                ) : requests.map((req) => (
+                ) : requests.filter(req => 
+                    req.subject.toLowerCase().includes(search.toLowerCase()) || 
+                    req.user.toLowerCase().includes(search.toLowerCase()) ||
+                    req.id.includes(search)
+                ).map((req) => (
                   <tr key={req.id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3 font-mono text-muted-foreground">{req.id.substring(0, 8)}</td>
                     <td className="px-4 py-3 font-medium">{req.subject}</td>
@@ -171,11 +184,6 @@ export function Requests() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{req.date}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </td>
                   </tr>
                 ))}
               </tbody>

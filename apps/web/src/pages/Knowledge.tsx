@@ -14,6 +14,7 @@ interface Article {
 
 export function Knowledge() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [search, setSearch] = useState('');
   const { token } = useAuth();
 
   useEffect(() => {
@@ -36,16 +37,27 @@ export function Knowledge() {
         </div>
         <div className="relative w-full md:w-[300px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search articles..." className="pl-8" />
+          <Input 
+            placeholder="Search articles..." 
+            className="pl-8" 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {articles.length === 0 ? (
+        {articles.filter(article => 
+            article.title.toLowerCase().includes(search.toLowerCase()) || 
+            article.category.toLowerCase().includes(search.toLowerCase())
+        ).length === 0 ? (
             <div className="col-span-3 text-center text-muted-foreground py-12">
                 No articles found.
             </div>
-        ) : articles.map((article) => (
+        ) : articles.filter(article => 
+            article.title.toLowerCase().includes(search.toLowerCase()) || 
+            article.category.toLowerCase().includes(search.toLowerCase())
+        ).map((article) => (
           <Card key={article.id} className="hover:border-primary/50 transition-all cursor-pointer group">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

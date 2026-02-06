@@ -17,16 +17,35 @@ interface DashboardStats {
     chartData: Array<{ name: string, total: number }>;
 }
 
+interface AuditLog {
+    id: string;
+    action: string;
+    actorId: string;
+    timestamp: string;
+}
+
 export function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<AuditLog[]>([]);
   const { token } = useAuth();
 
   useEffect(() => {
+    if (!token) return;
+
     fetch('http://localhost:4000/stats/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())
     .then(data => setStats(data))
+    .catch(err => console.error(err));
+
+    fetch('http://localhost:4000/audit', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data)) setRecentActivity(data.slice(0, 5));
+    })
     .catch(err => console.error(err));
   }, [token]);
 
@@ -137,7 +156,6 @@ export function Dashboard() {
           </CardContent>
         </Card>
         
-        {/* Placeholder for Recent Activity or other widgets */}
         <Card className="col-span-3">
             <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
@@ -145,27 +163,19 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <div className="flex items-center">
-                        <div className="ml-4 space-y-1">
-                            <p className="text-sm font-medium leading-none">User Login</p>
-                            <p className="text-sm text-muted-foreground">admin@ops.os logged in</p>
+                    {recentActivity.length === 0 ? (
+                        <div className="text-sm text-muted-foreground text-center py-4">No recent activity</div>
+                    ) : recentActivity.map((log) => (
+                        <div key={log.id} className="flex items-center">
+                            <div className="ml-4 space-y-1">
+                                <p className="text-sm font-medium leading-none capitalize">{log.action.replace('.', ' ')}</p>
+                                <p className="text-sm text-muted-foreground">{log.actorId}</p>
+                            </div>
+                            <div className="ml-auto font-medium text-xs text-muted-foreground">
+                                {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
                         </div>
-                        <div className="ml-auto font-medium text-xs text-muted-foreground">2m ago</div>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="ml-4 space-y-1">
-                            <p className="text-sm font-medium leading-none">New Request</p>
-                            <p className="text-sm text-muted-foreground">REQ-1025 created</p>
-                        </div>
-                        <div className="ml-auto font-medium text-xs text-muted-foreground">15m ago</div>
-                    </div>
-                    <div className="flex items-center">
-                        <div className="ml-4 space-y-1">
-                            <p className="text-sm font-medium leading-none">Backup Completed</p>
-                            <p className="text-sm text-muted-foreground">System backup successful</p>
-                        </div>
-                        <div className="ml-auto font-medium text-xs text-muted-foreground">1h ago</div>
-                    </div>
+                    ))}
                 </div>
             </CardContent>
         </Card>

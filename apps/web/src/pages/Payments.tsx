@@ -13,11 +13,21 @@ interface Transaction {
   date: string;
 }
 
+interface PaymentStats {
+    revenue: { value: string, change: string };
+    invoices: { value: string, change: string };
+    subscriptions: { value: string, change: string };
+}
+
 export function Payments() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [stats, setStats] = useState<PaymentStats | null>(null);
   const { token } = useAuth();
 
   useEffect(() => {
+    if (!token) return;
+
+    // Fetch transactions
     fetch('http://localhost:4000/payments/transactions', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -26,7 +36,17 @@ export function Payments() {
         if (Array.isArray(data)) setTransactions(data);
     })
     .catch(err => console.error(err));
+
+    // Fetch stats
+    fetch('http://localhost:4000/payments/stats', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => setStats(data))
+    .catch(err => console.error(err));
   }, [token]);
+
+  if (!stats) return <div className="p-8 text-center text-muted-foreground">Loading payments data...</div>;
 
   return (
     <div className="space-y-6">
@@ -47,10 +67,10 @@ export function Payments() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">{stats.revenue.value}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <span className="text-green-500 flex items-center mr-1">
-                <ArrowUpRight className="h-3 w-3" /> +20.1%
+                <ArrowUpRight className="h-3 w-3" /> {stats.revenue.change}
               </span>
               from last month
             </p>
@@ -62,10 +82,10 @@ export function Payments() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,234.00</div>
+            <div className="text-2xl font-bold">{stats.invoices.value}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <span className="text-red-500 flex items-center mr-1">
-                <ArrowDownRight className="h-3 w-3" /> +4.5%
+                <ArrowDownRight className="h-3 w-3" /> {stats.invoices.change}
               </span>
               from last month
             </p>
@@ -77,9 +97,9 @@ export function Payments() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">573</div>
+            <div className="text-2xl font-bold">{stats.subscriptions.value}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              +12 since yesterday
+              +{stats.subscriptions.change} since yesterday
             </p>
           </CardContent>
         </Card>

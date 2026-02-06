@@ -3,7 +3,7 @@ import { Badge } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card"
 import { Input } from "@/components/Input"
-import { Search, Filter, MoreHorizontal, X } from "lucide-react"
+import { Search, Filter, X } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 
 interface Request {

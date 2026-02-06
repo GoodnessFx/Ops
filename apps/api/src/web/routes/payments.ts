@@ -29,6 +29,14 @@ export async function registerPayments(app: FastifyInstance) {
       ];
   });
 
+  app.get('/payments/stats', { preHandler: requireAuth }, async () => {
+      return {
+          revenue: { value: "$45,231.89", change: "+20.1%" },
+          invoices: { value: "$12,234.00", change: "+4.5%" },
+          subscriptions: { value: "573", change: "+12" }
+      };
+  });
+
   app.post('/payments/webhooks/stripe', async (req, reply) => {
     reply.code(200);
     return { received: true };
